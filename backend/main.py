@@ -6,7 +6,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 import logging
-from flask import Flask, jsonify
+import uvicorn
 
 # Configuração básica de logging
 logging.basicConfig(level=logging.INFO)
@@ -128,6 +128,11 @@ def call_gemini_with_retry(messages: list, max_retries: int = 3, initial_delay: 
     
     raise Exception("Max retries reached for Gemini API")
 
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "message": "Service is healthy"}
+
 @app.post("/api/chat")
 async def chat_with_ai(request: ChatRequest):
     try:
@@ -153,13 +158,12 @@ async def chat_with_ai(request: ChatRequest):
         logger.error(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
     
-    
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
-
 
 if __name__ == "__main__":
-    import uvicorn
-    logger.info("Starting server with system prompt integration...")
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    logger.info("Starting FastAPI server...")
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=int(os.environ.get("PORT", 5000)),
+        log_level="debug"
+    )
