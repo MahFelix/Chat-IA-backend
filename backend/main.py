@@ -6,6 +6,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 import logging
+from flask import Flask, jsonify
 
 # Configuração básica de logging
 logging.basicConfig(level=logging.INFO)
@@ -151,6 +152,12 @@ async def chat_with_ai(request: ChatRequest):
     except Exception as e:
         logger.error(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+    
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 
 if __name__ == "__main__":
     import uvicorn
