@@ -74,6 +74,13 @@ class ChatRequest(BaseModel):
     message: str
     context: list = []
 
+
+replicate.Client(api_token=os.getenv("REPLICATE_API_TOKEN"))
+
+class ImageRequest(BaseModel):
+    prompt: str
+
+
 def prepare_messages(user_message: str, context: list = None):
     """Prepara o histórico de mensagens incluindo o system prompt"""
     messages = []
@@ -132,6 +139,15 @@ def call_gemini_with_retry(messages: list, max_retries: int = 3, initial_delay: 
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "message": "Service is healthy"}
+
+
+@app.post("/generate-image")
+async def generate_image(req: ImageRequest):
+    output = replicate.run(
+        "stability-ai/stable-diffusion",
+        input={"prompt": req.prompt}
+    )
+    return {"image_url": output[0]}  # retorna a URL da imagem
 
 @app.post("/api/chat")
 async def chat_with_ai(request: ChatRequest):
