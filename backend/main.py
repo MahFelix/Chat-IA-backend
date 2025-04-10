@@ -142,13 +142,26 @@ async def health_check():
     return {"status": "ok", "message": "Service is healthy"}
 
 
-@app.post("/generate-image")
+@app.post("/api/generate-image")
 async def generate_image(req: ImageRequest):
-    output = replicate.run(
-        "stability-ai/stable-diffusion",
-        input={"prompt": req.prompt}
-    )
-    return {"image_url": output[0]}  # retorna a URL da imagem
+    try:
+        output = replicate.run(
+            "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+            input={
+                "prompt": req.prompt,
+                "width": 512,
+                "height": 512,
+                "num_outputs": 1,
+                "refiner": True
+            }
+        )
+        if not output or len(output) == 0:
+            raise HTTPException(status_code=500, detail="Failed to generate image")
+        
+        return {"image_url": output[0]}
+    except Exception as e:
+        logger.error(f"Image generation error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/chat")
 async def chat_with_ai(request: ChatRequest):
