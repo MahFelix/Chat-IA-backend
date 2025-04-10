@@ -145,20 +145,30 @@ async def health_check():
 @app.post("/api/generate-image")
 async def generate_image(req: ImageRequest):
     try:
+        if not req.prompt:
+            raise HTTPException(status_code=400, detail="Prompt is required")
+        
+        # Pré-processa o prompt para melhor qualidade
+        enhanced_prompt = f"high-quality, detailed, 4k resolution: {req.prompt}"
+        
         output = replicate.run(
             "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
             input={
-                "prompt": req.prompt,
-                "width": 512,
-                "height": 512,
+                "prompt": enhanced_prompt,
+                "width": 1024,
+                "height": 1024,
                 "num_outputs": 1,
-                "refiner": True
+                "refiner": True,
+                "scheduler": "K_EULER",
+                "negative_prompt": "blurry, low quality, distorted, watermark"
             }
         )
+        
         if not output or len(output) == 0:
             raise HTTPException(status_code=500, detail="Failed to generate image")
         
         return {"image_url": output[0]}
+    
     except Exception as e:
         logger.error(f"Image generation error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
