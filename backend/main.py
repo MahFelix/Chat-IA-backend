@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import os
 import logging
 import uvicorn
+import replicate
 
 # Configuração básica de logging
 logging.basicConfig(level=logging.INFO)
